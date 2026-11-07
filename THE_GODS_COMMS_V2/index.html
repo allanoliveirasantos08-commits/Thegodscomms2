@@ -2,119 +2,257 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#080b14">
-  <meta name="description" content="THE GODS COMMS. A central de comunicação da equipe The Gods Gaming.">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#040810">
+  <meta name="description" content="THE GODS COMMS. Voz, tela e chat da equipe The Gods Gaming.">
   <title>THE GODS COMMS</title>
+  <link rel="icon" href="assets/the-gods-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module">import * as LivekitClient from "https://esm.sh/livekit-client@2.15.6"; window.LivekitClient = LivekitClient;</script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/livekit-client@2.15.7/dist/livekit-client.umd.min.js"></script>
+  <script defer src="config.js"></script>
+  <script defer src="app.js"></script>
 </head>
 <body>
-  <section id="auth-view" class="auth-screen">
-    <div class="auth-art"><img src="assets/the-gods-logo.png" alt="Logo original The Gods Gaming"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/></symbol>
+  <symbol id="i-mic-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M9 9v3a3 3 0 0 0 5 2.2M15 9.3V6a3 3 0 0 0-5.7-1.3"/><path d="M19 11a7 7 0 0 1-.9 3.4M5 11a7 7 0 0 0 11 5.8M12 18v3"/></symbol>
+  <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></symbol>
+  <symbol id="i-headphones-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M3 18v-6a9 9 0 0 1 2.6-6.3M21 12a9 9 0 0 0-8.5-9M21 18v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></symbol>
+  <symbol id="i-screen" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M12 13V7M9 10l3-3 3 3"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-leave" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-hash" viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+  <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></symbol>
+  <symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
+</svg>
+
+<!-- LOGIN -->
+<section id="auth-view" class="auth">
+  <div class="auth-hero">
+    <img class="auth-logo" data-logo src="assets/the-gods-logo.png" alt="The Gods Gaming">
+    <h1>Renascemos para dominar.</h1>
+    <p class="auth-lead">Voz, tela e chat da The Gods Gaming num só lugar.</p>
+    <ul class="auth-features">
+      <li><svg class="i"><use href="#i-mic"/></svg><div><b>Voz nítida</b><span>Cancelamento de eco e ruído, volume por pessoa.</span></div></li>
+      <li><svg class="i"><use href="#i-screen"/></svg><div><b>Tela em Full HD</b><span>Até 1080p a 30 fps, quando a conexão permitir.</span></div></li>
+      <li><svg class="i"><use href="#i-hash"/></svg><div><b>Chat em tempo real</b><span>Canais, presença e aviso de quem está digitando.</span></div></li>
+    </ul>
+    <div class="eq" id="eq" aria-hidden="true"></div>
+  </div>
+  <div class="auth-side">
     <div class="auth-card">
-      <div class="auth-kicker"><span class="live-dot"></span> COMMUNITY PLATFORM</div>
-      <h1>Entre para a<br><span>arena.</span></h1>
-      <p class="muted">A comunicação da The Gods começa aqui.</p>
-      <div class="auth-tabs"><button class="auth-tab active" data-mode="login">Entrar</button><button class="auth-tab" data-mode="signup">Criar conta</button></div>
+      <h2>Entrar na arena</h2>
+      <p class="muted">Use a conta da equipe para acessar os canais.</p>
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" data-mode="login" type="button">Entrar</button>
+        <button class="auth-tab" data-mode="signup" type="button">Criar conta</button>
+      </div>
       <form id="auth-form">
-        <label for="email">E-mail</label><input id="email" type="email" autocomplete="email" placeholder="voce@email.com" required>
-        <label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo de 6 caracteres" required>
-        <button class="btn btn-primary btn-wide" id="auth-submit">Entrar na plataforma <span>↗</span></button>
+        <label for="email">E-mail</label>
+        <input id="email" type="email" autocomplete="email" placeholder="voce@email.com" required>
+        <label for="password">Senha</label>
+        <input id="password" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo de 6 caracteres" required>
+        <button class="btn btn-primary btn-wide" id="auth-submit" type="submit">Entrar na plataforma</button>
       </form>
       <button class="text-button" id="forgot-password" type="button">Esqueci minha senha</button>
-      <p class="auth-message" id="auth-message">Use sua conta para acessar a comunidade.</p>
+      <p class="auth-message" id="auth-message" role="status">Use sua conta para acessar a comunidade.</p>
       <p class="config-warning" id="config-warning" hidden>Falta configurar a chave publicável do Supabase no arquivo <b>config.js</b>.</p>
     </div>
-    <div class="auth-footer">THE GODS GAMING <span>•</span> RENASCEMOS PARA DOMINAR</div>
-  </section>
-
-  <div id="app-view" class="app-shell" hidden>
-    <aside class="server-rail">
-      <div class="server-logo"><img src="assets/the-gods-logo.png" alt="The Gods"></div>
-      <div class="rail-separator"></div>
-      <button class="server-button active" title="The Gods"><img src="assets/the-gods-logo.png" alt=""></button>
-      <button class="server-button add-server" title="The Gods">＋</button>
-      <div class="rail-spacer"></div>
-      <button class="server-button rail-logout" id="logout-rail" title="Sair">↪</button>
-    </aside>
-
-    <aside class="channel-sidebar">
-      <header class="team-header"><div><strong>THE GODS <span>GAMING</span></strong><small>ESPAÇO DA EQUIPE</small></div><button class="icon-button" id="team-menu" title="Opções">⌄</button></header>
-      <div class="sidebar-scroll">
-        <div class="channel-category"><span>CANAIS DE TEXTO</span><button id="new-text-channel" title="Criar canal de texto">＋</button></div>
-        <div id="text-channels" class="channel-list"><div class="loading-line">Carregando canais...</div></div>
-        <div class="channel-category voice-category"><span>CANAIS DE VOZ</span><button id="new-voice-channel" title="Criar sala de voz">＋</button></div>
-        <div id="voice-channels" class="channel-list"></div>
-      </div>
-      <div class="account-card"><div class="avatar" id="my-avatar">TG</div><div class="account-copy"><b id="my-name">Guerreiro</b><small><i class="online-dot"></i> Online</small></div><button class="icon-button" id="profile-edit" title="Editar perfil">⚙</button><button class="icon-button" id="logout-side" title="Sair">↪</button></div>
-    </aside>
-
-    <main class="chat-area">
-      <header class="chat-topbar">
-        <button class="mobile-menu" id="mobile-menu" aria-label="Abrir canais">☰</button>
-        <div class="current-channel-icon" id="current-channel-icon">#</div>
-        <div class="current-channel-copy"><strong id="chat-title">Bem-vindo à arena</strong><small id="chat-subtitle">Escolha um canal para começar a conversar</small></div>
-        <div class="topbar-actions"><span class="connection-status"><i></i> Conectado</span><button class="icon-button" title="Notificações">♢</button></div>
-      </header>
-      <section id="welcome-state" class="welcome-state">
-        <div class="welcome-logo"><img src="assets/the-gods-logo.png" alt="Logo The Gods Gaming"></div>
-        <p class="eyebrow">CENTRAL DA COMUNIDADE</p>
-        <h1>Seja bem-vindo,<br><span>guerreiro.</span></h1>
-        <p>As estratégias, os avisos e as conversas da The Gods começam aqui.</p>
-        <div class="welcome-tip"><span>✦</span> Selecione um canal ao lado e entre na conversa.</div>
-      </section>
-      <section id="chat-view" class="chat-view" hidden>
-        <div id="messages" class="messages"><div class="empty-state">Carregando mensagens...</div></div>
-        <div class="composer-wrap">
-          <form id="message-form" class="composer">
-            <button type="button" class="composer-plus" id="composer-plus" title="Anexos em breve">＋</button>
-            <input id="message-input" maxlength="2000" autocomplete="off" placeholder="Conversar em #geral" disabled>
-            <button class="send-button" id="send-btn" type="submit" disabled aria-label="Enviar mensagem">➤</button>
-          </form>
-          <div class="composer-hint">Lembre-se: respeito e união fortalecem a equipe.</div>
-        </div>
-      </section>
-      <section id="voice-view" class="voice-view" hidden>
-        <div class="voice-workspace">
-          <header class="voice-room-head"><div><p class="eyebrow">THE GODS • VOICE ROOM</p><h2 id="voice-title">Sala de voz</h2><p id="voice-connection-label" class="voice-muted">Entre na sala para conversar com a equipe.</p></div><span id="voice-live-pill" class="voice-live-pill">● DESCONECTADO</span></header>
-          <div class="voice-stage" id="screen-stage"><div class="screen-placeholder"><div class="screen-icon">▣</div><strong>Compartilhamento de tela</strong><span>Quando alguém compartilhar, a transmissão aparecerá aqui.</span></div></div>
-          <div class="voice-people-wrap"><div class="voice-section-label">NA SALA <span id="voice-participant-count">0</span></div><div id="voice-participants" class="voice-participants"><div class="voice-empty">Ninguém conectado ainda.</div></div></div>
-          <div class="voice-controls">
-            <button id="voice-join" class="voice-action voice-join">🎧 <span>Entrar na sala</span></button>
-            <button id="voice-mic" class="voice-action" disabled>🎙️ <span>Ligar microfone</span></button>
-            <button id="voice-screen" class="voice-action" disabled>🖥️ <span>Compartilhar tela</span></button>
-            <button id="voice-leave" class="voice-action voice-danger" disabled>↗ <span>Sair da sala</span></button>
-          </div>
-          <div class="voice-settings">
-            <label><span>Microfone</span><select id="voice-input-device" disabled><option value="">Dispositivo padrão</option></select></label>
-            <label><span>Saída de áudio</span><select id="voice-output-device" disabled><option value="">Dispositivo padrão</option></select></label>
-            <label class="keep-audio"><input id="keep-audio" type="checkbox"><span>Manter áudio fora da aba</span></label>
-          </div>
-          <div class="voice-footnote">O áudio continua conectado ao alternar entre canais. A reprodução em segundo plano depende das permissões e do comportamento do navegador/sistema.</div>
-        </div>
-      </section>
-      <footer class="app-footer"><span>THE GODS COMMS</span><span>•</span><span>RENASCEMOS PARA DOMINAR</span></footer>
-    </main>
-
-    <aside class="member-sidebar">
-      <div class="member-heading"><strong>MEMBROS</strong><span id="member-count">0</span></div>
-      <div class="member-group-title"><span class="presence-dot"></span> ONLINE <span id="online-count">0</span></div>
-      <div id="online-members" class="member-list"><div class="loading-line">Carregando...</div></div>
-      <div class="member-group-title offline-title">MEMBROS DA EQUIPE</div>
-      <div id="all-members" class="member-list"></div>
-      <div class="member-note">A presença é atualizada enquanto os membros estão conectados.</div>
-    </aside>
   </div>
+</section>
 
-  <dialog id="channel-dialog" class="modal"><form id="channel-form" method="dialog"><button type="button" class="modal-close" id="close-dialog">×</button><p class="eyebrow">NOVO ESPAÇO</p><h2>Criar canal</h2><label for="channel-name">Nome do canal</label><input id="channel-name" maxlength="32" placeholder="ex.: estratégias" required><label for="channel-type">Tipo de canal</label><select id="channel-type"><option value="text">Texto</option><option value="voice">Voz</option></select><button class="btn btn-primary btn-wide" type="submit">Criar canal</button></form></dialog>
-  <dialog id="profile-dialog" class="modal"><form id="profile-form" method="dialog"><button type="button" class="modal-close" id="close-profile">×</button><p class="eyebrow">IDENTIDADE NA ARENA</p><h2>Seu perfil</h2><label for="display-name">Nome de exibição</label><input id="display-name" maxlength="32" placeholder="Como a equipe vai te chamar" required><button class="btn btn-primary btn-wide" type="submit">Salvar perfil</button></form></dialog>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+<!-- APP -->
+<div id="app-view" class="app-shell" hidden>
+  <div id="scrim" class="scrim"></div>
+
+  <nav class="rail" aria-label="Servidores">
+    <div class="rail-brand"><img data-logo src="assets/the-gods-logo.png" alt="The Gods"></div>
+    <div class="rail-sep"></div>
+    <button class="rail-btn active" title="The Gods Gaming"><img data-logo src="assets/the-gods-logo.png" alt=""></button>
+    <div class="rail-spacer"></div>
+    <button class="rail-btn rail-out" id="logout-rail" title="Sair"><svg class="i"><use href="#i-leave"/></svg></button>
+  </nav>
+
+  <aside class="sidebar" id="channel-sidebar">
+    <header class="team-header">
+      <div class="team-name">THE GODS <span>GAMING</span></div>
+      <small>Espaço da equipe</small>
+    </header>
+    <div class="sidebar-scroll">
+      <div class="cat"><span>Canais de texto</span><button id="new-text-channel" title="Criar canal de texto" aria-label="Criar canal de texto"><svg class="i"><use href="#i-plus"/></svg></button></div>
+      <div id="text-channels" class="channel-list"></div>
+      <div class="cat"><span>Salas de voz</span><button id="new-voice-channel" title="Criar sala de voz" aria-label="Criar sala de voz"><svg class="i"><use href="#i-plus"/></svg></button></div>
+      <div id="voice-channels" class="channel-list"></div>
+    </div>
+
+    <div id="voice-dock" class="voice-dock" hidden>
+      <button class="dock-info" id="dock-go" type="button">
+        <span class="dock-wave" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="dock-copy"><b>Voz conectada</b><small id="dock-name">Sala</small></span>
+      </button>
+      <div class="dock-actions">
+        <button class="dock-btn" id="dock-mic" type="button" title="Desligar microfone" aria-label="Desligar microfone"><svg class="i"><use href="#i-mic"/></svg></button>
+        <button class="dock-btn" id="dock-deaf" type="button" title="Ensurdecer" aria-label="Ensurdecer"><svg class="i"><use href="#i-headphones"/></svg></button>
+        <button class="dock-btn danger" id="dock-leave" type="button" title="Sair da sala" aria-label="Sair da sala"><svg class="i"><use href="#i-leave"/></svg></button>
+      </div>
+    </div>
+
+    <div class="account">
+      <div class="av" id="my-avatar">TG</div>
+      <div class="account-copy"><b id="my-name">Guerreiro</b><small><i class="dot"></i> Online</small></div>
+      <button class="icon-button" id="profile-edit" title="Editar perfil" aria-label="Editar perfil"><svg class="i"><use href="#i-settings"/></svg></button>
+      <button class="icon-button" id="logout-side" title="Sair" aria-label="Sair"><svg class="i"><use href="#i-leave"/></svg></button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-button mobile-only" id="mobile-menu" aria-label="Abrir canais"><svg class="i"><use href="#i-menu"/></svg></button>
+      <div class="topbar-icon" id="current-channel-icon"><svg class="i"><use href="#i-hash"/></svg></div>
+      <div class="topbar-copy"><strong id="chat-title">Bem-vindo à arena</strong><small id="chat-subtitle">Escolha um canal para começar</small></div>
+      <span class="conn-chip" id="conn-chip"><i></i><span>Conectando</span></span>
+      <button class="icon-button members-toggle" id="members-toggle" aria-label="Mostrar membros"><svg class="i"><use href="#i-users"/></svg></button>
+    </header>
+
+    <section id="welcome-state" class="welcome">
+      <img class="welcome-logo" data-logo src="assets/the-gods-logo.png" alt="">
+      <h1>Seja bem-vindo, guerreiro.</h1>
+      <p id="welcome-text">Selecione um canal ao lado para entrar na conversa.</p>
+      <button class="btn btn-primary" id="seed-channels" type="button" hidden>Criar canais iniciais</button>
+    </section>
+
+    <section id="chat-view" class="chat-view" hidden>
+      <div id="messages" class="messages"></div>
+      <button id="scroll-bottom" class="scroll-bottom" type="button" hidden><svg class="i"><use href="#i-arrow-down"/></svg><span>Ir para o fim</span></button>
+      <div class="composer-wrap">
+        <div id="typing" class="typing" aria-live="polite"></div>
+        <form id="message-form" class="composer" autocomplete="off">
+          <button type="button" class="icon-button" id="emoji-btn" title="Emojis" aria-label="Emojis"><svg class="i"><use href="#i-smile"/></svg></button>
+          <textarea id="message-input" rows="1" maxlength="2000" placeholder="Conversar" disabled></textarea>
+          <span class="char-count" id="char-count" hidden></span>
+          <button class="send-button" id="send-btn" type="submit" disabled aria-label="Enviar mensagem"><svg class="i"><use href="#i-send"/></svg></button>
+          <div id="emoji-pop" class="emoji-pop" hidden></div>
+        </form>
+      </div>
+    </section>
+
+    <section id="voice-view" class="voice-view" hidden>
+      <header class="voice-head">
+        <div><h2 id="voice-title">Sala de voz</h2><p id="voice-connection-label">Entre na sala para falar com a equipe.</p></div>
+        <span id="voice-live-pill" class="pill"><i></i><span>Desconectado</span></span>
+      </header>
+
+      <div class="voice-body">
+        <div id="voice-lobby" class="lobby">
+          <div class="lobby-card">
+            <div class="lobby-icon"><svg class="i"><use href="#i-headphones"/></svg></div>
+            <h3 id="lobby-title">Pronto para entrar?</h3>
+            <p id="lobby-note">Você entra com o microfone ligado. Dá para desligar a qualquer momento.</p>
+            <div id="lobby-people" class="lobby-people"></div>
+            <button id="voice-join" class="btn btn-primary btn-big" type="button"><svg class="i"><use href="#i-headphones"/></svg><span>Entrar na sala</span></button>
+            <button class="text-button" id="lobby-settings" type="button">Ajustar microfone e saída de áudio</button>
+          </div>
+        </div>
+
+        <div id="voice-room" class="voice-room" hidden>
+          <div id="audio-banner" class="audio-banner" hidden><span>O navegador bloqueou o áudio da sala.</span><button class="btn btn-small" id="audio-start" type="button">Ativar áudio</button></div>
+          <div id="share-banner" class="share-banner" hidden><svg class="i"><use href="#i-screen"/></svg><span>Você está compartilhando sua tela.</span><button class="btn btn-small" id="share-stop" type="button">Parar</button></div>
+          <div id="stage-wrap" class="stage-wrap" hidden>
+            <div class="stage" id="screen-stage"><div class="stage-label" id="stage-label"></div></div>
+            <div class="stage-bar"><div id="stage-tabs" class="stage-tabs"></div><button class="icon-button" id="stage-fullscreen" title="Tela cheia" aria-label="Tela cheia"><svg class="i"><use href="#i-maximize"/></svg></button></div>
+          </div>
+          <div class="section-label">Na sala <span id="voice-participant-count">0</span></div>
+          <div id="voice-participants" class="participants"></div>
+        </div>
+      </div>
+
+      <div id="voice-controls" class="controls" hidden>
+        <button id="voice-mic" class="ctl" type="button" aria-label="Desligar microfone" title="Desligar microfone (M)"><span class="ctl-ic"><svg class="i"><use href="#i-mic"/></svg></span><span class="ctl-tx">Microfone</span></button>
+        <button id="voice-deaf" class="ctl" type="button" aria-label="Ensurdecer" title="Ensurdecer (D)"><span class="ctl-ic"><svg class="i"><use href="#i-headphones"/></svg></span><span class="ctl-tx">Áudio</span></button>
+        <button id="voice-screen" class="ctl" type="button" aria-label="Compartilhar tela" title="Compartilhar tela"><span class="ctl-ic"><svg class="i"><use href="#i-screen"/></svg></span><span class="ctl-tx">Tela</span></button>
+        <button id="voice-settings-btn" class="ctl" type="button" aria-label="Ajustes de áudio" title="Ajustes de áudio"><span class="ctl-ic"><svg class="i"><use href="#i-sliders"/></svg></span><span class="ctl-tx">Ajustes</span></button>
+        <button id="voice-leave" class="ctl ctl-leave" type="button" aria-label="Sair da sala" title="Sair da sala"><span class="ctl-ic"><svg class="i"><use href="#i-leave"/></svg></span><span class="ctl-tx">Sair</span></button>
+      </div>
+    </section>
+  </main>
+
+  <aside class="members" id="member-sidebar">
+    <div class="members-head"><strong>Membros</strong><span id="member-count">0</span></div>
+    <div class="group-title"><i class="dot"></i> Online <span id="online-count">0</span></div>
+    <div id="online-members" class="member-list"></div>
+    <div class="group-title off">Offline <span id="offline-count">0</span></div>
+    <div id="offline-members" class="member-list"></div>
+  </aside>
+</div>
+
+<!-- MODAIS -->
+<dialog id="channel-dialog" class="modal">
+  <form id="channel-form" method="dialog">
+    <button type="button" class="modal-close" id="close-dialog" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button>
+    <h2>Criar canal</h2>
+    <label for="channel-name">Nome do canal</label>
+    <input id="channel-name" maxlength="32" placeholder="ex.: estrategias" required>
+    <label for="channel-type">Tipo</label>
+    <select id="channel-type"><option value="text">Texto</option><option value="voice">Voz</option></select>
+    <button class="btn btn-primary btn-wide" type="submit">Criar canal</button>
+  </form>
+</dialog>
+
+<dialog id="profile-dialog" class="modal">
+  <form id="profile-form" method="dialog">
+    <button type="button" class="modal-close" id="close-profile" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button>
+    <h2>Seu perfil</h2>
+    <label for="display-name">Nome de exibição</label>
+    <input id="display-name" maxlength="32" placeholder="Como a equipe vai te chamar" required>
+    <button class="btn btn-primary btn-wide" type="submit">Salvar perfil</button>
+  </form>
+</dialog>
+
+<dialog id="audio-dialog" class="modal modal-wide">
+  <div class="modal-body">
+    <button type="button" class="modal-close" id="close-audio" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button>
+    <h2>Ajustes de áudio</h2>
+    <label for="voice-input-device">Microfone</label>
+    <select id="voice-input-device"><option value="">Padrão do sistema</option></select>
+    <div class="meter" aria-hidden="true"><div id="mic-meter"></div></div>
+    <label for="voice-output-device">Saída de áudio</label>
+    <select id="voice-output-device"><option value="">Padrão do sistema</option></select>
+    <p class="hint" id="output-hint" hidden>Este navegador não permite escolher a saída. Use o seletor de som do sistema.</p>
+    <div class="toggles">
+      <label class="toggle"><input id="pref-noise" type="checkbox"><span>Supressão de ruído</span></label>
+      <label class="toggle"><input id="pref-echo" type="checkbox"><span>Cancelamento de eco</span></label>
+      <label class="toggle"><input id="pref-agc" type="checkbox"><span>Ganho automático do microfone</span></label>
+      <label class="toggle"><input id="pref-automic" type="checkbox"><span>Entrar com o microfone ligado</span></label>
+      <label class="toggle"><input id="keep-audio" type="checkbox"><span>Manter áudio ativo em segundo plano</span></label>
+      <label class="toggle"><input id="pref-sounds" type="checkbox"><span>Sons de entrada e saída</span></label>
+    </div>
+    <p class="hint">Atalhos: <kbd>M</kbd> liga/desliga o microfone, <kbd>D</kbd> ensurdece. O navegador ou o celular ainda pode pausar o áudio em segundo plano; fechar a aba encerra a chamada.</p>
+  </div>
+</dialog>
+
+<dialog id="recovery-dialog" class="modal">
+  <form id="recovery-form" method="dialog">
+    <h2>Definir nova senha</h2>
+    <label for="new-password">Nova senha</label>
+    <input id="new-password" type="password" minlength="6" autocomplete="new-password" placeholder="Mínimo de 6 caracteres" required>
+    <button class="btn btn-primary btn-wide" type="submit">Salvar senha</button>
+  </form>
+</dialog>
+
+<div id="audio-sink" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

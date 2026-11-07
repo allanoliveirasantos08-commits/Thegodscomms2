@@ -1,8 +1,11 @@
 {
-  "name": "the-gods-comms-v2",
+  "name": "the-gods-comms-v3",
   "private": true,
   "type": "module",
-  "scripts": { "deploy": "wrangler deploy" },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
   "dependencies": { "livekit-server-sdk": "^2.13.3" },
   "devDependencies": { "wrangler": "^4.0.0" }
 }

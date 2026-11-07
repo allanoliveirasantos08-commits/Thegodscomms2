@@ -1,64 +1,85 @@
-# THE GODS COMMS V2
+# THE GODS COMMS V3
 
-Plataforma da equipe The Gods Gaming com Supabase (login, perfis, canais, chat em tempo real e presença) e LiveKit (salas de voz e compartilhamento de tela). A identidade visual e a logo original foram preservadas.
+Plataforma da The Gods Gaming: login (Supabase Auth), canais de texto com chat em tempo real, presença online e salas de voz com LiveKit (microfone, volume individual, escolha de dispositivos e compartilhamento de tela Full HD).
 
-## Recursos desta versão
+## O que mudou nesta versão
 
-- Login, cadastro e recuperação de senha via Supabase Auth.
-- Canais de texto e voz separados, criação de canais e perfis.
-- Chat de texto em tempo real via Supabase Realtime.
-- Presença online dos membros.
-- Entrada e saída de salas de voz usando LiveKit/WebRTC.
-- Ligar/desligar microfone com cancelamento de eco, supressão de ruído e controle automático de ganho quando suportados pelo navegador.
-- Compartilhamento de tela com captura até 1920x1080 a 30 FPS, conforme suporte do navegador e capacidade da conexão.
-- Indicador de participantes e atividade de fala.
-- Controle de volume individual dos participantes remotos.
-- Seleção de microfone e saída de áudio quando suportada pelo navegador/dispositivo.
-- Opção para manter a conexão ao alternar de canal/aba. O navegador ou o sistema operacional ainda pode suspender áudio em segundo plano; fechar o navegador encerra a chamada.
-- Interface responsiva com identidade The Gods em azul-marinho e azul elétrico.
+**Visual**
+- Interface nova em azul-marinho e azul elétrico, pensada para telas HD/Full HD e responsiva (celular, tablet, desktop).
+- Fontes Unbounded (títulos) e Manrope (interface); ícones em SVG.
 
-## Configuração já existente
+**Voz**
+- Entrar/sair da sala, ligar/desligar microfone e **ensurdecer** (atalhos `M` e `D`).
+- Anel de fala animado que reage ao volume de cada participante e indicador de qualidade da conexão.
+- Volume individual por participante, **lembrado entre sessões**.
+- Seleção de microfone e saída de áudio (a saída depende do navegador; Chrome/Edge suportam), com suprimir ruído, eco e ganho automático ajustáveis ao vivo.
+- Compartilhamento de tela até 1920x1080 a 30 FPS com áudio, exibido num palco grande; vários compartilhamentos viram abas.
+- Painel de voz no menu lateral: continua visível ao trocar de canal, com mudo, ensurdecer e sair.
+- Quem está em cada sala de voz aparece no menu lateral, mesmo para quem ainda não entrou.
+- Sons de entrada/saída, reconexão automática com aviso, aviso quando o navegador bloqueia o áudio.
 
-O `config.js` mantém a URL e a chave publicável do Supabase. A chave publicável pode ficar no navegador com RLS habilitado. Nunca coloque `service_role`, `sb_secret_` ou o segredo LiveKit no frontend.
+**Chat**
+- Mensagens agrupadas por autor, separadores por dia, links clicáveis, Shift+Enter para quebra de linha, emojis.
+- Aviso "fulano está digitando", contador de não lidas por canal (também no título da aba).
+- Uma única conexão Realtime para todos os canais; recupera mensagens perdidas após queda.
 
-O banco Supabase já existente deve ser mantido. Não é necessário apagar tabelas nem executar novamente SQL destrutivo para habilitar a voz. O arquivo `sql/schema.sql` é mantido como referência de estrutura.
+**Correções**
+- O arraste do volume não é mais interrompido (antes a lista era recriada a cada mudança de fala).
+- O LiveKit agora carrega por script UMD fixado em versão (antes dependia do esm.sh e podia não estar pronto).
+- O Worker valida que a sala é um **canal de voz real** e usa o nome do perfil.
+- Recuperação de senha agora tem tela para definir a nova senha.
+- `wrangler.toml`: `compatibility_date` fixada em data estável e `.assetsignore` impede publicar `worker.js`, `package.json` e `node_modules` como arquivos estáticos.
 
-## Configurar os segredos do Worker no Cloudflare
+## Arquivos
 
-O `worker.js` expõe `POST /api/livekit/token`, valida o access token no Supabase e gera um token LiveKit curto. Configure no Worker de produção, em **Configurações > Variáveis e segredos**:
+Substitua no repositório: `index.html`, `style.css`, `app.js`, `worker.js`, `wrangler.toml`, `package.json`, `README.md` e adicione `.assetsignore`.
+Mantenha como está: `config.js`, a pasta `assets/` (com `the-gods-logo.png`) e `sql/`. Se a logo não for encontrada, a interface usa um brasão de reserva.
+
+## Segredos do Worker (Cloudflare > Configurações > Variáveis e segredos)
 
 | Nome | Valor |
 |---|---|
-| `LIVEKIT_URL` | URL WebSocket do projeto LiveKit, começando com `wss://` |
-| `LIVEKIT_API_KEY` | Identificador da chave API LiveKit |
-| `LIVEKIT_API_SECRET` | Segredo correspondente. Salvar como **Secret** |
+| `LIVEKIT_URL` | URL `wss://...` do projeto LiveKit |
+| `LIVEKIT_API_KEY` | Chave API do LiveKit |
+| `LIVEKIT_API_SECRET` | Segredo (salvar como **Secret**) |
 | `SUPABASE_URL` | `https://ejwwgpewmcayrwbbqvaf.supabase.co` |
-| `SUPABASE_ANON_KEY` | A mesma chave publicável usada no `config.js` |
+| `SUPABASE_ANON_KEY` | A mesma chave publicável do `config.js` |
 
-Não envie `LIVEKIT_API_SECRET` pelo chat, GitHub ou frontend.
+Nunca coloque `LIVEKIT_API_SECRET`, `service_role` ou `sb_secret_` no frontend ou no GitHub.
 
-## Deploy pelo GitHub conectado ao Cloudflare Workers
-
-A raiz do projeto deve ser a pasta que contém este README, `wrangler.toml`, `worker.js`, `package.json`, `index.html`, `app.js`, `style.css`, `config.js` e `assets/`.
+## Deploy
 
 - Comando de build: `npm install`
 - Comando de implantação: `npx wrangler deploy`
-- Diretório raiz: a pasta `THE_GODS_COMMS_V2` que contém este README (no repositório atual, confira a pasta interna duplicada `THE_GODS_COMMS_V2/THE_GODS_COMMS_V2`).
+- Diretório raiz: a pasta que contém `wrangler.toml` e `worker.js`.
 
-O `wrangler.toml` configura o Worker para servir os arquivos estáticos e encaminhar `/api/*` ao backend. Depois do deploy, teste `https://SEU-WORKER.workers.dev/api/health`, que deve retornar `{"ok":true,"service":"the-gods-comms-api"}`.
+Depois do deploy, abra `https://SEU-WORKER.workers.dev/api/health`. Deve responder `{"ok":true,"service":"the-gods-comms-api"}`.
+
+## Supabase: conferir
+
+O chat em tempo real exige a tabela `messages` na publicação do Realtime. Se as mensagens só aparecem após enviar, rode uma vez (não apaga nada):
+
+```sql
+alter publication supabase_realtime add table public.messages;
+```
+
+A presença e o aviso de digitação usam canais do Realtime e não precisam de tabelas.
 
 ## Teste de voz
 
-1. Entre na plataforma com uma conta já cadastrada.
-2. Abra um canal de voz e clique em **Entrar na sala**.
-3. Permita o acesso ao microfone quando solicitado.
-4. Ligue o microfone e teste com outra conta em outro navegador/dispositivo.
-5. Teste o compartilhamento de tela e os controles de volume individual.
+1. Entre com duas contas em navegadores/dispositivos diferentes.
+2. Abra uma sala de voz e clique em **Entrar na sala** (permita o microfone).
+3. Fale: o anel verde deve acender no seu cartão e no da outra conta.
+4. Teste ensurdecer, volume individual e **Tela**.
 
-Se a interface mostrar “Backend ainda não configurado”, confira os cinco bindings/segredos do Worker. Se a chamada conectar mas não houver áudio, confira permissões do navegador, dispositivos selecionados, firewall e disponibilidade do projeto LiveKit.
+Mensagens de erro e o que fazer:
+- "Backend ainda não configurado. Faltam: ..." — configure os segredos listados.
+- "A API de voz não respondeu" — o Worker não foi publicado ou a rota `/api` não chega nele.
+- Conecta mas sem áudio — permissões do navegador, dispositivo de saída, firewall ou limites do projeto LiveKit.
 
-## Limitações importantes
+## Limitações
 
-- A qualidade real depende da rede, do navegador, dos dispositivos e do plano/limites do servidor LiveKit. O sistema adapta mídia via WebRTC, mas não pode garantir 4K de transmissão; a interface é preparada para telas de alta resolução e o compartilhamento está limitado a até Full HD/30 FPS nesta configuração.
-- Reprodução com a aba em segundo plano é solicitada mantendo a conexão ativa, mas nenhum site consegue impedir que o navegador, o celular ou o sistema operacional suspenda a reprodução. Fechar a aba/navegador encerra a chamada.
-- Antes de abrir a plataforma publicamente, revise as políticas RLS e as permissões de criação/entrada de canais para o modelo de comunidade desejado.
+- A qualidade real depende de rede, navegador, dispositivo e plano do LiveKit. O compartilhamento é limitado a Full HD/30 FPS; não há garantia de 4K.
+- Nenhum site consegue impedir que o navegador ou o celular pause o áudio em segundo plano. A opção "Manter áudio ativo" usa Wake Lock e Media Session como melhor esforço. Fechar a aba encerra a chamada.
+- Compartilhar tela não existe na maioria dos navegadores de celular.
+- Antes de abrir a plataforma ao público, revise as políticas RLS e quem pode criar canais.
