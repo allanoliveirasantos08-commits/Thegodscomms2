@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080d18"><title>THE GODS COMMS</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="auth-view" class="auth-wrap">
+  <section class="auth-card">
+    <div class="brand">TG<span>✦</span></div><p class="eyebrow">COMMUNITY PLATFORM</p>
+    <h1>THE GODS<br><span>COMMS</span></h1>
+    <p class="muted">Sua equipe. Sua comunicação. Seu campo de batalha.</p>
+    <div class="tabs"><button class="tab active" data-mode="login">Entrar</button><button class="tab" data-mode="signup">Criar conta</button></div>
+    <form id="auth-form">
+      <label>Seu e-mail<input id="email" type="email" autocomplete="email" placeholder="voce@email.com" required></label>
+      <label>Senha<input id="password" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo de 6 caracteres" required></label>
+      <button class="primary full" id="auth-submit">Entrar na plataforma ↗</button>
+    </form>
+    <p class="auth-note" id="auth-note">Use sua conta para acessar a comunidade.</p>
+    <p class="config-warning" id="config-warning" hidden>Configure a URL e a chave pública do Supabase em <b>config.js</b> para ativar o acesso.</p>
+  </section>
+</div>
+
+<div id="app-view" class="app" hidden>
+  <aside class="rail"><div class="brand">TG<span>✦</span></div><button class="rail-btn active">⌂</button><button class="rail-btn">◈</button><button class="rail-btn">✉</button><div class="push"></div><button class="rail-btn" id="logout">↪</button></aside>
+  <main class="main">
+    <header class="top"><div class="wordmark">THE GODS <span>COMMS</span><small>COMMUNITY PLATFORM</small></div><div class="user-area"><i></i><span id="user-email"></span><button id="logout-top" class="ghost">Sair</button></div></header>
+    <section class="welcome"><div><p class="eyebrow">CENTRAL DA COMUNIDADE</p><h2>Bem-vindo à arena,<br><span>guerreiro.</span></h2><p class="muted">A comunicação da The Gods começa aqui.</p></div><div class="sigil">TG</div></section>
+    <div class="grid">
+      <section class="panel">
+        <div class="section-head"><div><p class="eyebrow">ESPAÇOS DA EQUIPE</p><h3>Canais</h3></div><button class="outline" id="new-channel">＋ Criar canal</button></div>
+        <div id="channels" class="channels"><p class="muted">Carregando canais...</p></div>
+      </section>
+      <section class="panel chat-panel">
+        <p class="eyebrow">COMUNICAÇÃO EM TEMPO REAL</p><h3 id="chat-title">Selecione um canal</h3>
+        <div id="messages" class="messages"><div class="empty">Escolha um canal de texto para abrir a conversa.</div></div>
+        <form id="message-form" class="message-form"><input id="message-input" maxlength="2000" placeholder="Selecione um canal primeiro..." disabled><button class="primary" disabled id="send-btn">Enviar ↗</button></form>
+      </section>
+    </div>
+    <footer>THE GODS COMMS <span>•</span> RENASCEMOS PARA DOMINAR</footer>
+  </main>
+</div>
+<dialog id="channel-dialog"><form id="channel-form"><button type="button" class="x" id="close-dialog">×</button><p class="eyebrow">NOVO ESPAÇO</p><h3>Criar canal</h3><label>Nome<input id="channel-name" maxlength="30" placeholder="ex.: estratégias" required></label><label>Tipo<select id="channel-type"><option value="text">Texto</option><option value="voice">Voz (interface inicial)</option></select></label><button class="primary full">Criar canal</button></form></dialog>
+<div id="toast" class="toast" role="status"></div>
+<script src="config.js"></script><script src="app.js"></script>
+</body></html>
