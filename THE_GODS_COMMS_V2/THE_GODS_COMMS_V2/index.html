@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module">import * as LivekitClient from "https://esm.sh/livekit-client@2.15.6"; window.LivekitClient = LivekitClient;</script>
 </head>
 <body>
   <section id="auth-view" class="auth-screen">
@@ -79,7 +80,23 @@
         </div>
       </section>
       <section id="voice-view" class="voice-view" hidden>
-        <div class="voice-card"><div class="voice-symbol">♫</div><p class="eyebrow">COMUNICAÇÃO DE VOZ</p><h2 id="voice-title">Sala de voz</h2><p>O canal está cadastrado. A conexão de áudio e compartilhamento de tela será ativada na próxima etapa de integração com o servidor de mídia.</p><span class="voice-status">MÓDULO DE VOZ AINDA NÃO CONECTADO</span></div>
+        <div class="voice-workspace">
+          <header class="voice-room-head"><div><p class="eyebrow">THE GODS • VOICE ROOM</p><h2 id="voice-title">Sala de voz</h2><p id="voice-connection-label" class="voice-muted">Entre na sala para conversar com a equipe.</p></div><span id="voice-live-pill" class="voice-live-pill">● DESCONECTADO</span></header>
+          <div class="voice-stage" id="screen-stage"><div class="screen-placeholder"><div class="screen-icon">▣</div><strong>Compartilhamento de tela</strong><span>Quando alguém compartilhar, a transmissão aparecerá aqui.</span></div></div>
+          <div class="voice-people-wrap"><div class="voice-section-label">NA SALA <span id="voice-participant-count">0</span></div><div id="voice-participants" class="voice-participants"><div class="voice-empty">Ninguém conectado ainda.</div></div></div>
+          <div class="voice-controls">
+            <button id="voice-join" class="voice-action voice-join">🎧 <span>Entrar na sala</span></button>
+            <button id="voice-mic" class="voice-action" disabled>🎙️ <span>Ligar microfone</span></button>
+            <button id="voice-screen" class="voice-action" disabled>🖥️ <span>Compartilhar tela</span></button>
+            <button id="voice-leave" class="voice-action voice-danger" disabled>↗ <span>Sair da sala</span></button>
+          </div>
+          <div class="voice-settings">
+            <label><span>Microfone</span><select id="voice-input-device" disabled><option value="">Dispositivo padrão</option></select></label>
+            <label><span>Saída de áudio</span><select id="voice-output-device" disabled><option value="">Dispositivo padrão</option></select></label>
+            <label class="keep-audio"><input id="keep-audio" type="checkbox"><span>Manter áudio fora da aba</span></label>
+          </div>
+          <div class="voice-footnote">O áudio continua conectado ao alternar entre canais. A reprodução em segundo plano depende das permissões e do comportamento do navegador/sistema.</div>
+        </div>
       </section>
       <footer class="app-footer"><span>THE GODS COMMS</span><span>•</span><span>RENASCEMOS PARA DOMINAR</span></footer>
     </main>

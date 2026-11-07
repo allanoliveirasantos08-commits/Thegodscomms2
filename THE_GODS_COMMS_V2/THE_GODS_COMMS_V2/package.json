@@ -1,0 +1,16 @@
+{
+  "name": "the-gods-comms-v2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "node --check src/worker.js && node --check public/app.js"
+  },
+  "dependencies": {
+    "livekit-server-sdk": "^2.13.3"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
