@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080b14">
+  <meta name="description" content="THE GODS COMMS. A central de comunicação da equipe The Gods Gaming.">
+  <title>THE GODS COMMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <section id="auth-view" class="auth-screen">
+    <div class="auth-art"><img src="assets/the-gods-logo.png" alt="Logo original The Gods Gaming"></div>
+    <div class="auth-card">
+      <div class="auth-kicker"><span class="live-dot"></span> COMMUNITY PLATFORM</div>
+      <h1>Entre para a<br><span>arena.</span></h1>
+      <p class="muted">A comunicação da The Gods começa aqui.</p>
+      <div class="auth-tabs"><button class="auth-tab active" data-mode="login">Entrar</button><button class="auth-tab" data-mode="signup">Criar conta</button></div>
+      <form id="auth-form">
+        <label for="email">E-mail</label><input id="email" type="email" autocomplete="email" placeholder="voce@email.com" required>
+        <label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" minlength="6" placeholder="Mínimo de 6 caracteres" required>
+        <button class="btn btn-primary btn-wide" id="auth-submit">Entrar na plataforma <span>↗</span></button>
+      </form>
+      <button class="text-button" id="forgot-password" type="button">Esqueci minha senha</button>
+      <p class="auth-message" id="auth-message">Use sua conta para acessar a comunidade.</p>
+      <p class="config-warning" id="config-warning" hidden>Falta configurar a chave publicável do Supabase no arquivo <b>config.js</b>.</p>
+    </div>
+    <div class="auth-footer">THE GODS GAMING <span>•</span> RENASCEMOS PARA DOMINAR</div>
+  </section>
+
+  <div id="app-view" class="app-shell" hidden>
+    <aside class="server-rail">
+      <div class="server-logo"><img src="assets/the-gods-logo.png" alt="The Gods"></div>
+      <div class="rail-separator"></div>
+      <button class="server-button active" title="The Gods"><img src="assets/the-gods-logo.png" alt=""></button>
+      <button class="server-button add-server" title="The Gods">＋</button>
+      <div class="rail-spacer"></div>
+      <button class="server-button rail-logout" id="logout-rail" title="Sair">↪</button>
+    </aside>
+
+    <aside class="channel-sidebar">
+      <header class="team-header"><div><strong>THE GODS <span>GAMING</span></strong><small>ESPAÇO DA EQUIPE</small></div><button class="icon-button" id="team-menu" title="Opções">⌄</button></header>
+      <div class="sidebar-scroll">
+        <div class="channel-category"><span>CANAIS DE TEXTO</span><button id="new-text-channel" title="Criar canal de texto">＋</button></div>
+        <div id="text-channels" class="channel-list"><div class="loading-line">Carregando canais...</div></div>
+        <div class="channel-category voice-category"><span>CANAIS DE VOZ</span><button id="new-voice-channel" title="Criar sala de voz">＋</button></div>
+        <div id="voice-channels" class="channel-list"></div>
+      </div>
+      <div class="account-card"><div class="avatar" id="my-avatar">TG</div><div class="account-copy"><b id="my-name">Guerreiro</b><small><i class="online-dot"></i> Online</small></div><button class="icon-button" id="profile-edit" title="Editar perfil">⚙</button><button class="icon-button" id="logout-side" title="Sair">↪</button></div>
+    </aside>
+
+    <main class="chat-area">
+      <header class="chat-topbar">
+        <button class="mobile-menu" id="mobile-menu" aria-label="Abrir canais">☰</button>
+        <div class="current-channel-icon" id="current-channel-icon">#</div>
+        <div class="current-channel-copy"><strong id="chat-title">Bem-vindo à arena</strong><small id="chat-subtitle">Escolha um canal para começar a conversar</small></div>
+        <div class="topbar-actions"><span class="connection-status"><i></i> Conectado</span><button class="icon-button" title="Notificações">♢</button></div>
+      </header>
+      <section id="welcome-state" class="welcome-state">
+        <div class="welcome-logo"><img src="assets/the-gods-logo.png" alt="Logo The Gods Gaming"></div>
+        <p class="eyebrow">CENTRAL DA COMUNIDADE</p>
+        <h1>Seja bem-vindo,<br><span>guerreiro.</span></h1>
+        <p>As estratégias, os avisos e as conversas da The Gods começam aqui.</p>
+        <div class="welcome-tip"><span>✦</span> Selecione um canal ao lado e entre na conversa.</div>
+      </section>
+      <section id="chat-view" class="chat-view" hidden>
+        <div id="messages" class="messages"><div class="empty-state">Carregando mensagens...</div></div>
+        <div class="composer-wrap">
+          <form id="message-form" class="composer">
+            <button type="button" class="composer-plus" id="composer-plus" title="Anexos em breve">＋</button>
+            <input id="message-input" maxlength="2000" autocomplete="off" placeholder="Conversar em #geral" disabled>
+            <button class="send-button" id="send-btn" type="submit" disabled aria-label="Enviar mensagem">➤</button>
+          </form>
+          <div class="composer-hint">Lembre-se: respeito e união fortalecem a equipe.</div>
+        </div>
+      </section>
+      <section id="voice-view" class="voice-view" hidden>
+        <div class="voice-card"><div class="voice-symbol">♫</div><p class="eyebrow">COMUNICAÇÃO DE VOZ</p><h2 id="voice-title">Sala de voz</h2><p>O canal está cadastrado. A conexão de áudio e compartilhamento de tela será ativada na próxima etapa de integração com o servidor de mídia.</p><span class="voice-status">MÓDULO DE VOZ AINDA NÃO CONECTADO</span></div>
+      </section>
+      <footer class="app-footer"><span>THE GODS COMMS</span><span>•</span><span>RENASCEMOS PARA DOMINAR</span></footer>
+    </main>
+
+    <aside class="member-sidebar">
+      <div class="member-heading"><strong>MEMBROS</strong><span id="member-count">0</span></div>
+      <div class="member-group-title"><span class="presence-dot"></span> ONLINE <span id="online-count">0</span></div>
+      <div id="online-members" class="member-list"><div class="loading-line">Carregando...</div></div>
+      <div class="member-group-title offline-title">MEMBROS DA EQUIPE</div>
+      <div id="all-members" class="member-list"></div>
+      <div class="member-note">A presença é atualizada enquanto os membros estão conectados.</div>
+    </aside>
+  </div>
+
+  <dialog id="channel-dialog" class="modal"><form id="channel-form" method="dialog"><button type="button" class="modal-close" id="close-dialog">×</button><p class="eyebrow">NOVO ESPAÇO</p><h2>Criar canal</h2><label for="channel-name">Nome do canal</label><input id="channel-name" maxlength="32" placeholder="ex.: estratégias" required><label for="channel-type">Tipo de canal</label><select id="channel-type"><option value="text">Texto</option><option value="voice">Voz</option></select><button class="btn btn-primary btn-wide" type="submit">Criar canal</button></form></dialog>
+  <dialog id="profile-dialog" class="modal"><form id="profile-form" method="dialog"><button type="button" class="modal-close" id="close-profile">×</button><p class="eyebrow">IDENTIDADE NA ARENA</p><h2>Seu perfil</h2><label for="display-name">Nome de exibição</label><input id="display-name" maxlength="32" placeholder="Como a equipe vai te chamar" required><button class="btn btn-primary btn-wide" type="submit">Salvar perfil</button></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
