@@ -10,6 +10,9 @@
   let db = null, user = null, profile = null, currentChannel = null;
   let messagesChannel = null, presenceChannel = null, authMode = 'login';
   let messageRows = new Map(), onlineUsers = new Map(), sending = false;
+  let liveRoom = null, liveRoomChannelId = null, micEnabled = false, screenEnabled = false;
+  const participantVolumes = new Map();
+  const keepAudioKey = 'tg_keep_audio_background';
 
   const initials = (name = 'TG') => name.trim().split(/\s+/).slice(0, 2).map(part => part[0] || '').join('').toUpperCase() || 'TG';
   const safeText = (value) => String(value ?? '');
@@ -113,6 +116,7 @@
   function createChannelButton(channel) {
     const button = document.createElement('button');
     button.className = 'channel' + (currentChannel?.id === channel.id ? ' active' : '');
+    button.dataset.channelId = channel.id;
     const symbol = document.createElement('span'); symbol.className = 'channel-symbol'; symbol.textContent = channel.type === 'voice' ? '♫' : '#';
     const name = document.createElement('span'); name.className = 'channel-name'; name.textContent = channel.name;
     button.append(symbol, name);
@@ -122,7 +126,7 @@
 
   async function openChannel(channel) {
     currentChannel = channel;
-    document.querySelectorAll('.channel').forEach(button => button.classList.toggle('active', button.querySelector('.channel-name')?.textContent === channel.name));
+    document.querySelectorAll('.channel').forEach(button => button.classList.toggle('active', button.dataset.channelId === channel.id));
     $('#welcome-state').hidden = true;
     $('#chat-title').textContent = channel.name;
     $('#chat-subtitle').textContent = channel.type === 'text' ? 'Canal de texto • mensagens em tempo real' : 'Sala de voz da equipe';
@@ -133,6 +137,8 @@
       $('#voice-title').textContent = channel.name;
       $('#message-input').disabled = true; $('#send-btn').disabled = true;
       await stopMessageSubscription();
+      if (liveRoom && liveRoomChannelId !== channel.id) await leaveVoiceRoom();
+      renderVoiceParticipants();
       return;
     }
     $('#message-input').disabled = false; $('#send-btn').disabled = false;
@@ -149,12 +155,26 @@
       })
       .subscribe(status => { if (status === 'CHANNEL_ERROR') toast('A conexão em tempo real falhou. Verifique o Realtime no Supabase.'); });
 
-    const { data, error } = await db.from('messages').select('id,content,user_id,created_at,profiles(display_name)').eq('channel_id', channel.id).order('created_at', { ascending: true }).limit(150);
+    // messages.user_id referencia auth.users, não profiles. Por isso buscamos
+    // as mensagens e os perfis separadamente, sem depender de uma FK inexistente.
+    const { data, error } = await db.from('messages')
+      .select('id,content,user_id,created_at')
+      .eq('channel_id', channel.id)
+      .order('created_at', { ascending: true })
+      .limit(150);
     if (error) {
       $('#messages').innerHTML = '<div class="empty-state">Não foi possível carregar o histórico. Confira as tabelas e as políticas RLS.</div>';
       toast('Erro ao carregar mensagens: ' + error.message); return;
     }
-    (data || []).forEach(message => renderMessage(message));
+    const authorIds = [...new Set((data || []).map(message => message.user_id).filter(Boolean))];
+    let profilesById = new Map();
+    if (authorIds.length) {
+      const { data: authors, error: authorsError } = await db.from('profiles')
+        .select('id,display_name').in('id', authorIds);
+      if (authorsError) toast('Mensagens carregadas, mas alguns nomes não puderam ser consultados.');
+      else profilesById = new Map((authors || []).map(author => [author.id, author]));
+    }
+    (data || []).forEach(message => renderMessage({ ...message, profiles: profilesById.get(message.user_id) || null }));
     if (!messageRows.size) $('#messages').innerHTML = '<div class="empty-state">Este canal ainda está quieto. Que tal começar a conversa?</div>';
   }
 
@@ -283,8 +303,195 @@
     } catch (error) { toast('Não foi possível salvar: ' + error.message); }
   });
 
+  function setVoiceStatus(text, connected = false) {
+    $('#voice-live-pill').textContent = connected ? '● CONECTADO' : '● DESCONECTADO';
+    $('#voice-live-pill').classList.toggle('connected', connected);
+    $('#voice-connection-label').textContent = text;
+  }
+
+  async function getLiveKitClient() {
+    if (window.LivekitClient) return window.LivekitClient;
+    throw new Error('Biblioteca de áudio não carregou. Atualize a página e tente novamente.');
+  }
+
+  async function joinVoiceRoom() {
+    if (!currentChannel || currentChannel.type !== 'voice') return toast('Selecione uma sala de voz primeiro.');
+    if (liveRoom && liveRoomChannelId === currentChannel.id) return toast('Você já está nessa sala.');
+    if (liveRoom) await leaveVoiceRoom();
+    const button = $('#voice-join'); button.disabled = true; button.querySelector('span').textContent = 'Conectando...';
+    try {
+      const { data: sessionData, error: sessionError } = await db.auth.getSession();
+      if (sessionError) throw sessionError;
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error('Sua sessão expirou. Entre novamente.');
+      const response = await fetch('/api/livekit/token', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ room: String(currentChannel.id) })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Não foi possível obter acesso à sala.');
+      const LK = await getLiveKitClient();
+      liveRoom = new LK.Room({ adaptiveStream: true, dynacast: true, stopLocalTrackOnUnpublish: true });
+      liveRoomChannelId = currentChannel.id;
+      liveRoom.on(LK.RoomEvent.ParticipantConnected, renderVoiceParticipants);
+      liveRoom.on(LK.RoomEvent.ParticipantDisconnected, renderVoiceParticipants);
+      liveRoom.on(LK.RoomEvent.ActiveSpeakersChanged, renderVoiceParticipants);
+      liveRoom.on(LK.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        attachLiveTrack(track, participant);
+        renderVoiceParticipants();
+      });
+      liveRoom.on(LK.RoomEvent.TrackUnsubscribed, (track) => {
+        track.detach().forEach(el => el.remove());
+        renderScreenStage(); renderVoiceParticipants();
+      });
+      liveRoom.on(LK.RoomEvent.LocalTrackPublished, renderVoiceParticipants);
+      liveRoom.on(LK.RoomEvent.LocalTrackUnpublished, (publication) => {
+        if (publication.source === LK.Track.Source.ScreenShare) {
+          screenEnabled = false; $('#voice-screen').classList.remove('active'); $('#voice-screen span').textContent = 'Compartilhar tela'; renderScreenStage();
+        }
+        if (publication.source === LK.Track.Source.Microphone) {
+          micEnabled = false; $('#voice-mic').classList.remove('active'); $('#voice-mic span').textContent = 'Ligar microfone';
+        }
+        renderVoiceParticipants();
+      });
+      liveRoom.on(LK.RoomEvent.Disconnected, () => {
+        setVoiceStatus('Conexão encerrada.', false);
+        $('#voice-join').disabled = false; $('#voice-join span').textContent = 'Entrar na sala';
+        $('#voice-mic').disabled = true; $('#voice-screen').disabled = true; $('#voice-leave').disabled = true;
+      });
+      await liveRoom.connect(payload.serverUrl, payload.token, { autoSubscribe: true });
+      setVoiceStatus('Conectado à sala. Seu áudio está pronto.', true);
+      $('#voice-mic').disabled = false; $('#voice-screen').disabled = false; $('#voice-leave').disabled = false;
+      $('#voice-input-device').disabled = false; $('#voice-output-device').disabled = false;
+      $('#voice-join').querySelector('span').textContent = 'Conectado';
+      await loadAudioDevices();
+      await renderVoiceParticipants();
+      toast('Você entrou na sala de voz.');
+    } catch (error) {
+      if (liveRoom) { try { await liveRoom.disconnect(); } catch {} liveRoom = null; liveRoomChannelId = null; }
+      setVoiceStatus(error.message || 'Falha ao conectar.', false);
+      toast(error.message || 'Não foi possível entrar na sala.');
+      button.querySelector('span').textContent = 'Entrar na sala';
+    } finally { button.disabled = false; }
+  }
+
+  function attachLiveTrack(track, participant) {
+    if (track.kind === 'audio') {
+      const audio = track.attach(); audio.autoplay = true; audio.className = 'voice-hidden-audio';
+      audio.dataset.participant = participant.identity; document.body.append(audio);
+    } else if (track.kind === 'video' && track.source === window.LivekitClient.Track.Source.ScreenShare) {
+      const video = track.attach(); video.autoplay = true; video.playsInline = true; video.dataset.screenOwner = participant.identity;
+      const stage = $('#screen-stage'); stage.replaceChildren(video);
+    }
+  }
+
+  function renderScreenStage() {
+    const stage = $('#screen-stage');
+    const activeVideo = liveRoom?.remoteParticipants ? [...liveRoom.remoteParticipants.values()].flatMap(p => [...p.videoTrackPublications.values()]).find(pub => pub.track && pub.source === window.LivekitClient.Track.Source.ScreenShare) : null;
+    if (!activeVideo) stage.innerHTML = '<div class="screen-placeholder"><div class="screen-icon">▣</div><strong>Compartilhamento de tela</strong><span>Quando alguém compartilhar, a transmissão aparecerá aqui.</span></div>';
+  }
+
+  async function renderVoiceParticipants() {
+    const list = $('#voice-participants'); if (!list) return;
+    list.replaceChildren();
+    if (!liveRoom) { list.innerHTML = '<div class="voice-empty">Ninguém conectado ainda.</div>'; $('#voice-participant-count').textContent = '0'; return; }
+    const participants = [liveRoom.localParticipant, ...liveRoom.remoteParticipants.values()];
+    const speakers = new Set((liveRoom.activeSpeakers || []).map(p => p.identity));
+    participants.forEach(participant => {
+      const name = participant.name || participant.identity || 'Guerreiro';
+      const card = document.createElement('div'); card.className = 'voice-person' + (speakers.has(participant.identity) ? ' speaking' : '');
+      const avatar = document.createElement('div'); avatar.className = 'voice-person-avatar'; avatar.textContent = initials(name);
+      const info = document.createElement('div'); info.className = 'voice-person-info';
+      const title = document.createElement('strong'); title.textContent = name + (participant.isLocal ? ' (Você)' : '');
+      const state = document.createElement('small'); state.textContent = participant.isSpeaking ? 'Falando agora' : (participant.isLocal ? (micEnabled ? 'Seu microfone está ligado' : 'Você está na sala') : 'Conectado');
+      info.append(title, state); card.append(avatar, info);
+      if (!participant.isLocal) {
+        const slider = document.createElement('input'); slider.type = 'range'; slider.min = '0'; slider.max = '1'; slider.step = '0.05'; slider.value = String(participantVolumes.get(participant.identity) ?? 1); slider.className = 'voice-volume'; slider.title = 'Volume individual';
+        slider.addEventListener('input', () => {
+          const volume = Number(slider.value); participantVolumes.set(participant.identity, volume);
+          document.querySelectorAll(`audio[data-participant="${CSS.escape(participant.identity)}"]`).forEach(audio => { audio.volume = volume; });
+          participant.audioTrackPublications.forEach(pub => pub.track?.setVolume?.(volume));
+        });
+        info.append(slider);
+      }
+      list.append(card);
+    });
+    $('#voice-participant-count').textContent = String(participants.length);
+  }
+
+  async function toggleMicrophone() {
+    if (!liveRoom) return;
+    try {
+      micEnabled = !micEnabled;
+      await liveRoom.localParticipant.setMicrophoneEnabled(micEnabled, { echoCancellation: true, noiseSuppression: true, autoGainControl: true });
+      $('#voice-mic').classList.toggle('active', micEnabled);
+      $('#voice-mic span').textContent = micEnabled ? 'Desligar microfone' : 'Ligar microfone';
+      renderVoiceParticipants();
+    } catch (error) { micEnabled = false; toast('Não foi possível acessar o microfone: ' + error.message); }
+  }
+
+  async function toggleScreenShare() {
+    if (!liveRoom) return;
+    try {
+      screenEnabled = !screenEnabled;
+      await liveRoom.localParticipant.setScreenShareEnabled(screenEnabled, { audio: true, resolution: { width: 1920, height: 1080, frameRate: 30 } });
+      $('#voice-screen span').textContent = screenEnabled ? 'Encerrar compartilhamento' : 'Compartilhar tela';
+      $('#voice-screen').classList.toggle('active', screenEnabled);
+      if (screenEnabled) {
+        const pub = [...liveRoom.localParticipant.videoTrackPublications.values()].find(p => p.source === window.LivekitClient.Track.Source.ScreenShare);
+        if (pub?.track) { const video = pub.track.attach(); video.autoplay = true; video.playsInline = true; $('#screen-stage').replaceChildren(video); }
+      } else renderScreenStage();
+    } catch (error) { screenEnabled = false; $('#voice-screen span').textContent = 'Compartilhar tela'; toast('Compartilhamento não iniciado: ' + error.message); }
+  }
+
+  async function loadAudioDevices() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const input = $('#voice-input-device'), output = $('#voice-output-device');
+      input.replaceChildren(); output.replaceChildren();
+      devices.filter(d => d.kind === 'audioinput').forEach((d, i) => input.add(new Option(d.label || `Microfone ${i + 1}`, d.deviceId)));
+      devices.filter(d => d.kind === 'audiooutput').forEach((d, i) => output.add(new Option(d.label || `Saída ${i + 1}`, d.deviceId)));
+      if (!input.options.length) input.add(new Option('Dispositivo padrão', ''));
+      if (!output.options.length) output.add(new Option('Dispositivo padrão', ''));
+    } catch { toast('Não foi possível listar os dispositivos de áudio.'); }
+  }
+
+  async function leaveVoiceRoom() {
+    if (!liveRoom) return;
+    try { await liveRoom.disconnect(); } catch {}
+    document.querySelectorAll('.voice-hidden-audio').forEach(audio => audio.remove());
+    liveRoom = null; liveRoomChannelId = null; micEnabled = false; screenEnabled = false;
+    $('#voice-join').disabled = false; $('#voice-join span').textContent = 'Entrar na sala';
+    $('#voice-mic').disabled = true; $('#voice-mic').classList.remove('active'); $('#voice-mic span').textContent = 'Ligar microfone';
+    $('#voice-screen').disabled = true; $('#voice-screen').classList.remove('active'); $('#voice-screen span').textContent = 'Compartilhar tela';
+    $('#voice-leave').disabled = true; $('#voice-input-device').disabled = true; $('#voice-output-device').disabled = true;
+    setVoiceStatus('Você saiu da sala.', false); renderScreenStage(); renderVoiceParticipants();
+  }
+
+  $('#voice-join').addEventListener('click', joinVoiceRoom);
+  $('#voice-mic').addEventListener('click', toggleMicrophone);
+  $('#voice-screen').addEventListener('click', toggleScreenShare);
+  $('#voice-leave').addEventListener('click', leaveVoiceRoom);
+  $('#keep-audio').checked = localStorage.getItem(keepAudioKey) === 'true';
+  $('#keep-audio').addEventListener('change', e => { localStorage.setItem(keepAudioKey, String(e.target.checked)); toast(e.target.checked ? 'A conexão será mantida ao alternar entre canais e abas.' : 'Preferência de áudio em segundo plano desativada.'); });
+  $('#voice-input-device').addEventListener('change', async e => {
+    if (!liveRoom || !e.target.value) return;
+    try { await liveRoom.switchActiveDevice('audioinput', e.target.value); toast('Microfone alterado.'); } catch (error) { toast('Não foi possível trocar o microfone: ' + error.message); }
+  });
+  $('#voice-output-device').addEventListener('change', async e => {
+    if (!liveRoom || !e.target.value) return;
+    try { await liveRoom.switchActiveDevice('audiooutput', e.target.value); toast('Saída de áudio alterada.'); } catch (error) { toast('Não foi possível trocar a saída: ' + error.message); }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && liveRoom && $('#keep-audio').checked) {
+      // Não desconectamos a sala ao minimizar/alternar de aba. O navegador ainda pode suspender áudio por política própria.
+      setVoiceStatus('Conectado • áudio mantido em segundo plano', true);
+    }
+  });
+
   async function logout() {
     try {
+      await leaveVoiceRoom();
       await stopMessageSubscription();
       if (presenceChannel) { await db.removeChannel(presenceChannel); presenceChannel = null; }
       await db.auth.signOut();

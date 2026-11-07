@@ -1,46 +1,64 @@
 # THE GODS COMMS V2
 
-Nova interface da plataforma The Gods, com identidade preta, azul-marinho e azul elétrico. A logo original enviada pelo usuário foi mantida sem edição em `assets/the-gods-logo.png`.
+Plataforma da equipe The Gods Gaming com Supabase (login, perfis, canais, chat em tempo real e presença) e LiveKit (salas de voz e compartilhamento de tela). A identidade visual e a logo original foram preservadas.
 
-## O que esta versão entrega
+## Recursos desta versão
 
-- Login, cadastro e recuperação de senha pelo Supabase Auth.
-- Perfis com nome de exibição, criados automaticamente no cadastro.
-- Canais de texto e salas de voz listados separadamente.
-- Chat em tempo real com autor correto, avatar por iniciais, horário e histórico.
-- Presença online via Supabase Realtime Presence.
-- Criação de canais e edição do nome de perfil.
-- Interface responsiva com navegação lateral inspirada em apps de comunidade.
-- SQL de atualização que preserva canais e mensagens existentes.
+- Login, cadastro e recuperação de senha via Supabase Auth.
+- Canais de texto e voz separados, criação de canais e perfis.
+- Chat de texto em tempo real via Supabase Realtime.
+- Presença online dos membros.
+- Entrada e saída de salas de voz usando LiveKit/WebRTC.
+- Ligar/desligar microfone com cancelamento de eco, supressão de ruído e controle automático de ganho quando suportados pelo navegador.
+- Compartilhamento de tela com captura até 1920x1080 a 30 FPS, conforme suporte do navegador e capacidade da conexão.
+- Indicador de participantes e atividade de fala.
+- Controle de volume individual dos participantes remotos.
+- Seleção de microfone e saída de áudio quando suportada pelo navegador/dispositivo.
+- Opção para manter a conexão ao alternar de canal/aba. O navegador ou o sistema operacional ainda pode suspender áudio em segundo plano; fechar o navegador encerra a chamada.
+- Interface responsiva com identidade The Gods em azul-marinho e azul elétrico.
 
-## 1. Configurar chave do Supabase
+## Configuração já existente
 
-Abra `config.js` e substitua `COLE_AQUI_SUA_CHAVE_PUBLICAVEL_COMPLETA` pela chave **publicável** do seu projeto Supabase (`sb_publishable_...`). A URL do projeto já está preenchida. Nunca coloque `sb_secret_` ou `service_role` no navegador.
+O `config.js` mantém a URL e a chave publicável do Supabase. A chave publicável pode ficar no navegador com RLS habilitado. Nunca coloque `service_role`, `sb_secret_` ou o segredo LiveKit no frontend.
 
-## 2. Atualizar o banco
+O banco Supabase já existente deve ser mantido. Não é necessário apagar tabelas nem executar novamente SQL destrutivo para habilitar a voz. O arquivo `sql/schema.sql` é mantido como referência de estrutura.
 
-1. Entre no painel do Supabase do projeto The Gods Comms.
-2. Abra **SQL Editor** > **New query**.
-3. Abra `sql/schema.sql`, copie todo o conteúdo e cole no editor.
-4. Clique em **Run**.
+## Configurar os segredos do Worker no Cloudflare
 
-O script é idempotente e foi escrito para atualizar a estrutura inicial sem apagar mensagens ou canais. Ele cria/preenche perfis, adiciona o gatilho de novos cadastros e recria as políticas RLS necessárias.
+O `worker.js` expõe `POST /api/livekit/token`, valida o access token no Supabase e gera um token LiveKit curto. Configure no Worker de produção, em **Configurações > Variáveis e segredos**:
 
-Se o Supabase informar que a tabela `messages` já está na publicação Realtime, isso é esperado.
+| Nome | Valor |
+|---|---|
+| `LIVEKIT_URL` | URL WebSocket do projeto LiveKit, começando com `wss://` |
+| `LIVEKIT_API_KEY` | Identificador da chave API LiveKit |
+| `LIVEKIT_API_SECRET` | Segredo correspondente. Salvar como **Secret** |
+| `SUPABASE_URL` | `https://ejwwgpewmcayrwbbqvaf.supabase.co` |
+| `SUPABASE_ANON_KEY` | A mesma chave publicável usada no `config.js` |
 
-## 3. Publicar no Cloudflare Pages
+Não envie `LIVEKIT_API_SECRET` pelo chat, GitHub ou frontend.
 
-1. Extraia o ZIP.
-2. Edite `config.js` e salve a chave publicável.
-3. Envie o conteúdo da pasta `THE_GODS_COMMS_V2` para o projeto Pages, mantendo `index.html`, `style.css`, `config.js`, `app.js` e a pasta `assets` na raiz.
-4. Abra o endereço publicado e teste com duas contas diferentes, preferencialmente em navegadores ou janelas separadas.
+## Deploy pelo GitHub conectado ao Cloudflare Workers
 
-## 4. Teste de identidade das mensagens
+A raiz do projeto deve ser a pasta que contém este README, `wrangler.toml`, `worker.js`, `package.json`, `index.html`, `app.js`, `style.css`, `config.js` e `assets/`.
 
-O envio consulta a sessão autenticada atual com `auth.getUser()` e grava o `user_id` retornado pelo Supabase. O nome do autor vem da tabela `profiles`, relacionada ao `user_id` da mensagem. O rótulo **Você** é exibido somente quando o `user_id` da mensagem corresponde ao ID da sessão atual. Isso evita tratar todos os autores como o usuário local.
+- Comando de build: `npm install`
+- Comando de implantação: `npx wrangler deploy`
+- Diretório raiz: a pasta `THE_GODS_COMMS_V2` que contém este README (no repositório atual, confira a pasta interna duplicada `THE_GODS_COMMS_V2/THE_GODS_COMMS_V2`).
 
-## 5. Limites desta entrega
+O `wrangler.toml` configura o Worker para servir os arquivos estáticos e encaminhar `/api/*` ao backend. Depois do deploy, teste `https://SEU-WORKER.workers.dev/api/health`, que deve retornar `{"ok":true,"service":"the-gods-comms-api"}`.
 
-As salas de voz já aparecem na interface, mas áudio real, chamadas em grupo, compartilhamento de tela e redução de ruído ainda não estão conectados. Para isso, a próxima etapa deve integrar um servidor de mídia (recomendado: LiveKit) com URL e emissão segura de tokens. Não é correto prometer voz estável usando apenas a interface atual.
+## Teste de voz
 
-Anexos, cargos/permissões, convites e moderação também ficam para etapas seguintes.
+1. Entre na plataforma com uma conta já cadastrada.
+2. Abra um canal de voz e clique em **Entrar na sala**.
+3. Permita o acesso ao microfone quando solicitado.
+4. Ligue o microfone e teste com outra conta em outro navegador/dispositivo.
+5. Teste o compartilhamento de tela e os controles de volume individual.
+
+Se a interface mostrar “Backend ainda não configurado”, confira os cinco bindings/segredos do Worker. Se a chamada conectar mas não houver áudio, confira permissões do navegador, dispositivos selecionados, firewall e disponibilidade do projeto LiveKit.
+
+## Limitações importantes
+
+- A qualidade real depende da rede, do navegador, dos dispositivos e do plano/limites do servidor LiveKit. O sistema adapta mídia via WebRTC, mas não pode garantir 4K de transmissão; a interface é preparada para telas de alta resolução e o compartilhamento está limitado a até Full HD/30 FPS nesta configuração.
+- Reprodução com a aba em segundo plano é solicitada mantendo a conexão ativa, mas nenhum site consegue impedir que o navegador, o celular ou o sistema operacional suspenda a reprodução. Fechar a aba/navegador encerra a chamada.
+- Antes de abrir a plataforma publicamente, revise as políticas RLS e as permissões de criação/entrada de canais para o modelo de comunidade desejado.
